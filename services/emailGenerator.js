@@ -161,6 +161,17 @@ ${candidate.portfolio ? `Portfolio: ${candidate.portfolio}` : ''}`.trim();
   return { subject, body, method: 'algorithmic-tailor-engine' };
 }
 
+function validateSafeUrl(url, defaultFallback) {
+  if (!url) return defaultFallback;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.toString().replace(/\/$/, '');
+    }
+  } catch (_) {}
+  return defaultFallback;
+}
+
 /**
  * Optional LLM-driven generation when user supplies an API key (OpenAI, Anthropic, Groq, Ollama)
  */
@@ -200,7 +211,7 @@ Respond with ONLY the JSON object.`;
   if (provider === 'openai' || provider === 'groq') {
     const url = provider === 'groq'
       ? 'https://api.groq.com/openai/v1/chat/completions'
-      : (baseUrl || 'https://api.openai.com/v1/chat/completions');
+      : (validateSafeUrl(baseUrl, 'https://api.openai.com/v1') + '/chat/completions');
     const model = modelName || (provider === 'groq' ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini');
 
     const res = await fetch(url, {
@@ -256,7 +267,7 @@ Respond with ONLY the JSON object.`;
   }
 
   if (provider === 'ollama') {
-    const host = baseUrl || 'http://localhost:11434';
+    const host = validateSafeUrl(baseUrl, 'http://localhost:11434');
     const res = await fetch(`${host}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

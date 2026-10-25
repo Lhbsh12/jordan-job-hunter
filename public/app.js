@@ -403,10 +403,10 @@ function renderJobsList(jobs) {
         <!-- Bottom Action Buttons -->
         <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
           <div class="flex items-center space-x-1">
-            <button onclick="openEditJobModal('${job.id}')" class="p-1.5 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100" title="Edit Job Details">
+            <button onclick="openEditJobModal('${escapeHtml(job.id)}')" class="p-1.5 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100" title="Edit Job Details">
               <i class="fa-solid fa-pen-to-square text-xs"></i>
             </button>
-            <button onclick="deleteJob('${job.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded hover:bg-slate-100" title="Delete Job">
+            <button onclick="deleteJob('${escapeHtml(job.id)}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded hover:bg-slate-100" title="Delete Job">
               <i class="fa-solid fa-trash text-xs"></i>
             </button>
           </div>
@@ -419,20 +419,20 @@ function renderJobsList(jobs) {
                   <span>Apply on Portal</span>
                 </a>
               ` : ''}
-              <button onclick="openEditJobModal('${job.id}')" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg">
+              <button onclick="openEditJobModal('${escapeHtml(job.id)}')" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg">
                 <span>Add Email</span>
               </button>
             ` : !hasDraft ? `
-              <button onclick="generateEmailForJob('${job.id}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5">
+              <button onclick="generateEmailForJob('${escapeHtml(job.id)}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5">
                 <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
                 <span>Tailor Email</span>
               </button>
             ` : `
-              <button onclick="openReviewModal('${job.id}')" class="px-3 py-1.5 ${job.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'} text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5" title="Review draft and give your OK">
+              <button onclick="openReviewModal('${escapeHtml(job.id)}')" class="px-3 py-1.5 ${job.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'} text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5" title="Review draft and give your OK">
                 <i class="fa-solid fa-signature text-[11px]"></i>
                 <span>${job.status === 'Approved' ? 'Approved (View)' : 'Review & OK'}</span>
               </button>
-              <button onclick="promptSendDirectly('${job.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5">
+              <button onclick="promptSendDirectly('${escapeHtml(job.id)}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5">
                 <i class="fa-solid fa-paper-plane text-[10px]"></i>
                 <span>Send</span>
               </button>

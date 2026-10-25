@@ -12,8 +12,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Ensure data folder exists
@@ -247,7 +255,30 @@ function readJsonFile(filePath, fallback) {
 }
 
 function writeJsonFile(filePath, data) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  const tmpPath = `${filePath}.${Date.now()}.${Math.random().toString(36).substring(2, 8)}.tmp`;
+  try {
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, filePath);
+  } catch (err) {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch (_) {}
+  }
+}
+
+function sanitizeProfileForResponse(profile) {
+  return {
+    ...profile,
+    smtp: {
+      ...profile.smtp,
+      hasPassword: Boolean(profile.smtp && profile.smtp.pass),
+      pass: profile.smtp && profile.smtp.pass ? '••••••••' : ''
+    },
+    llm: {
+      ...profile.llm,
+      hasApiKey: Boolean(profile.llm && profile.llm.apiKey),
+      apiKey: profile.llm && profile.llm.apiKey ? '••••••••' : ''
+    }
+  };
 }
 
 // Ensure starter files exist
@@ -269,19 +300,58 @@ if (!fs.existsSync(cvPdfPath) && fs.existsSync(samplePdfPath)) {
 // Profile Routes
 app.get('/api/profile', (req, res) => {
   const profile = readJsonFile(PROFILE_FILE, defaultProfile);
-  res.json(profile);
+  res.json(sanitizeProfileForResponse(profile));
 });
 
 app.post('/api/profile', (req, res) => {
   const current = readJsonFile(PROFILE_FILE, defaultProfile);
-  const updated = { ...current, ...req.body, updatedAt: new Date().toISOString() };
+  const incoming = req.body || {};
+
+  // Preserve existing SMTP password if incoming is masked or empty
+  let smtp = current.smtp || {};
+  if (incoming.smtp) {
+    const incomingPass = (incoming.smtp.pass || '').trim();
+    const shouldKeepPass = !incomingPass || incomingPass === '••••••••' || incomingPass === '********';
+    smtp = {
+      ...current.smtp,
+      ...incoming.smtp,
+      pass: shouldKeepPass ? (current.smtp ? current.smtp.pass : '') : incomingPass
+    };
+  }
+
+  // Preserve existing LLM API key if incoming is masked or empty
+  let llm = current.llm || {};
+  if (incoming.llm) {
+    const incomingKey = (incoming.llm.apiKey || '').trim();
+    const shouldKeepKey = !incomingKey || incomingKey === '••••••••' || incomingKey.startsWith('••••');
+    llm = {
+      ...current.llm,
+      ...incoming.llm,
+      apiKey: shouldKeepKey ? (current.llm ? current.llm.apiKey : '') : incomingKey
+    };
+  }
+
+  const updated = {
+    ...current,
+    ...incoming,
+    smtp,
+    llm,
+    updatedAt: new Date().toISOString()
+  };
+
   writeJsonFile(PROFILE_FILE, updated);
-  res.json({ success: true, profile: updated });
+  res.json({ success: true, profile: sanitizeProfileForResponse(updated) });
 });
 
 // SMTP Test Route
 app.post('/api/smtp/verify', async (req, res) => {
-  const smtpConfig = req.body;
+  const current = readJsonFile(PROFILE_FILE, defaultProfile);
+  const smtpConfig = { ...(req.body || {}) };
+  const incomingPass = (smtpConfig.pass || '').trim();
+  if (!incomingPass || incomingPass === '••••••••' || incomingPass === '********') {
+    smtpConfig.pass = current.smtp ? current.smtp.pass : '';
+  }
+
   try {
     await verifySmtp(smtpConfig);
     res.json({ success: true, message: "SMTP connection verified successfully!" });

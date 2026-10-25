@@ -22,7 +22,10 @@ function createImapClient(smtpConfig) {
       user: smtpConfig.user,
       pass: smtpConfig.pass
     },
-    logger: false
+    logger: false,
+    tls: {
+      rejectUnauthorized: smtpConfig.rejectUnauthorized !== false
+    }
   });
 }
 
