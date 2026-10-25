@@ -1,0 +1,30 @@
+{
+  "name": "Jordanian Candidate",
+  "email": "",
+  "phone": "+962 7 9000 0000",
+  "location": "Amman, Jordan",
+  "major": "Computer Science / Software Engineering",
+  "degree": "B.S. in Computer Science",
+  "university": "University in Jordan",
+  "skills": "JavaScript, TypeScript, React, Node.js, Python, SQL, REST APIs, Git, Docker",
+  "projects": "• Full-Stack Web Platform: Built responsive e-commerce web app using React, Node.js, and PostgreSQL.\n• Microservices Architecture: Architected RESTful microservices with JWT auth and automated testing.\n• Data & Metrics Pipeline: Developed automated data processing workflows transforming raw logs into analytics tables.",
+  "experience": "Passionate software engineer and problem solver based in Amman, Jordan. Experienced in building clean, scalable software applications and collaborating across cross-functional teams.",
+  "github": "https://github.com/your-username",
+  "linkedin": "https://linkedin.com/in/your-username",
+  "portfolio": "https://your-portfolio.com",
+  "resumeText": "Sample Resume Summary\nAdd your full resume or summary text here to enhance algorithmic and AI email tailoring.",
+  "targetKeywords": "Software Engineer, Full Stack, React, Node.js, Python, Data Analyst, Cloud",
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "secure": true,
+    "user": "",
+    "pass": "",
+    "fromName": "Candidate Name"
+  },
+  "llm": {
+    "provider": "local",
+    "apiKey": "",
+    "modelName": ""
+  }
+}

@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  jordan-job-hunter:
+    build: .
+    container_name: jordan-job-hunter
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persist local user profile, history, and uploaded resume
+      - ./data:/app/data
+      - ./public/resume.pdf:/app/public/resume.pdf
+    environment:
+      - PORT=3000
+      - NODE_ENV=production

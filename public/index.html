@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jordan Job Hunter 🇯🇴 | Self-Hosted Automated Job Outreach</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af',
+              800: '#1e3a8a',
+              900: '#172554'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 text-lg">
+          <i class="fa-solid fa-briefcase"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold text-slate-900 leading-tight">Jordan Job Hunter</h1>
+            <span class="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full flex items-center space-x-1">
+              <span>🇯🇴</span>
+              <span>Jordan Edition</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Self-Hosted Job Discovery & Direct Outreach • 100% Private & Open Source</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-2">
+        <button onclick="switchTab('jobs')" id="tab-btn-jobs" class="tab-btn active px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 bg-blue-50 text-blue-700">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>Target Jobs</span>
+          <span id="jobs-count-badge" class="ml-1.5 px-2 py-0.2 text-xs bg-blue-200 text-blue-800 rounded-full font-bold">0</span>
+        </button>
+        <button onclick="switchTab('profile')" id="tab-btn-profile" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-user-gear"></i>
+          <span>My Profile & CV</span>
+        </button>
+        <button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Email & AI Config</span>
+        </button>
+        <button onclick="switchTab('history')" id="tab-btn-history" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Sent History</span>
+        </button>
+        <button onclick="switchTab('inbox')" id="tab-btn-inbox" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 relative">
+          <i class="fa-solid fa-inbox text-purple-600"></i>
+          <span>Replies & Bounces</span>
+          <span id="inbox-count-badge" class="ml-1 px-1.5 py-0.2 text-[10px] bg-rose-500 text-white rounded-full font-bold">0</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- NOTIFICATION TOAST -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 translate-y-24 opacity-0 pointer-events-none flex items-center space-x-3 px-4 py-3 rounded-xl shadow-xl border">
+    <i id="toast-icon" class="text-lg"></i>
+    <span id="toast-message" class="text-sm font-medium"></span>
+  </div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==================== TAB 1: TARGET JOBS ==================== -->
+    <section id="tab-content-jobs" class="tab-pane block space-y-4">
+      <!-- Live Sync Status Banner -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-4 py-3.5 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-3 border border-indigo-900/50">
+        <div class="flex items-center space-x-3">
+          <span class="relative flex h-3 w-3">
+            <span id="sync-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span id="sync-dot" class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center space-x-1">
+                <i class="fa-solid fa-satellite-dish text-[11px]"></i>
+                <span id="sync-status-text">Live Auto-Sync Active (Every 2 min)</span>
+              </span>
+              <span class="text-slate-500">•</span>
+              <span class="text-xs text-slate-300 font-mono" id="sync-last-time">Syncing real-time Jordan openings...</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Discovering verified openings across Amman & Jordan • Tech, Software, Data, Engineering & Graduate Roles</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer bg-white/5 hover:bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10 transition-colors">
+            <input type="checkbox" id="auto-sync-checkbox" checked onchange="toggleAutoSyncSetting()" class="rounded text-emerald-500 focus:ring-emerald-400">
+            <span>Auto-Update (2m)</span>
+          </label>
+          <button onclick="triggerManualSync()" id="sync-now-btn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5">
+            <i class="fa-solid fa-arrows-rotate text-[11px]" id="sync-now-icon"></i>
+            <span>Sync Web Now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Role Preset Chips -->
+      <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
+        <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Filter Roles:</span>
+        <button onclick="applyRoleFilter('')" class="role-chip active px-2.5 py-1 rounded-lg bg-blue-600 text-white font-medium whitespace-nowrap">All Roles</button>
+        <button onclick="applyRoleFilter('software')" class="role-chip px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-medium whitespace-nowrap">Software & Web</button>
+        <button onclick="applyRoleFilter('data')" class="role-chip px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-medium whitespace-nowrap">Data & AI</button>
+        <button onclick="applyRoleFilter('cloud')" class="role-chip px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-medium whitespace-nowrap">Cloud & DevOps</button>
+        <button onclick="applyRoleFilter('mobile')" class="role-chip px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-medium whitespace-nowrap">Mobile App</button>
+        <button onclick="applyRoleFilter('qa')" class="role-chip px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-medium whitespace-nowrap">QA & Testing</button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+        <!-- Search & Filter -->
+        <div class="flex items-center space-x-3 w-full md:w-auto flex-1">
+          <div class="relative flex-1 max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+            <input type="text" id="job-search-input" oninput="filterJobs()" placeholder="Search company, role title, skills, or email..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <select id="status-filter" onchange="filterJobs()" class="py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            <option value="ALL">All Statuses</option>
+            <option value="New">Status: New</option>
+            <option value="Tailored">Status: Tailored (Needs Review)</option>
+            <option value="Approved">Status: Approved (Ready to Send)</option>
+            <option value="Sent">Status: Sent</option>
+          </select>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+          <button onclick="seedJordanLeads()" class="px-3 py-2 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition-colors flex items-center space-x-1.5 shadow-xs" title="Import leading Jordanian Tech & Enterprise Leads">
+            <span>🇯🇴</span>
+            <span>Jordan Tech Leads</span>
+          </button>
+          <button onclick="seedSampleJobs()" class="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center space-x-1.5" title="Reset sample test leads">
+            <i class="fa-solid fa-lightbulb text-amber-500"></i>
+            <span>Sample Jobs</span>
+          </button>
+          <button onclick="openAddJobModal()" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition-colors flex items-center space-x-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Target Job</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Jobs Grid -->
+      <div id="jobs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Job cards rendered here dynamically -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="no-jobs-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+        <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-500 mx-auto flex items-center justify-center text-2xl mb-3">
+          <i class="fa-solid fa-file-circle-plus"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">No Target Jobs Found</h3>
+        <p class="text-sm text-slate-500 max-w-sm mx-auto mt-1 mb-4">Click "Jordan Tech Leads" above or add a new job posting to begin tailoring cold outreach pitches.</p>
+        <button onclick="seedJordanLeads()" class="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow">
+          Import Top Jordan Employers
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: RESUME & PROFILE ==================== -->
+    <section id="tab-content-profile" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-wrap justify-between items-center pb-4 mb-6 border-b border-slate-200 gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Candidate Profile & Career Background</h2>
+            <p class="text-sm text-slate-500">This profile is analyzed by the engine to tailor cold outreach pitches directly to the recruiter and job requirements.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <a href="/resume.pdf" target="_blank" class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-lg flex items-center space-x-2 transition-colors" title="Place your resume.pdf into the public/ folder to attach it">
+              <i class="fa-solid fa-file-pdf text-rose-500"></i>
+              <span>View Attached CV (PDF)</span>
+            </a>
+            <button onclick="saveProfile()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow flex items-center space-x-2">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>Save Profile</span>
+            </button>
+          </div>
+        </div>
+
+        <form id="profile-form" onsubmit="event.preventDefault(); saveProfile();" class="space-y-6">
+          <!-- Basic Info -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name *</label>
+              <input type="text" id="prof-name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Ahmad Al-Khatib">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Your Email Address *</label>
+              <input type="email" id="prof-email" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. ahmad.khatib@gmail.com">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Phone Number (Jordan)</label>
+              <input type="text" id="prof-phone" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. +962 7 9000 0000">
+            </div>
+          </div>
+
+          <!-- Academic & Major -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Major / Discipline *</label>
+              <input type="text" id="prof-major" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Computer Science, Software Engineering, Data Science">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Degree Level</label>
+              <select id="prof-degree" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                <option value="B.S.">B.S. (Bachelor of Science / Engineering)</option>
+                <option value="M.S.">M.S. (Master of Science)</option>
+                <option value="Ph.D.">Ph.D.</option>
+                <option value="Associate">Diploma / Associate Degree</option>
+                <option value="Professional Certification">Certification / Coding Bootcamp</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">University / College in Jordan</label>
+              <input type="text" id="prof-university" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. University of Jordan, JUST, PSUT, GJU">
+            </div>
+          </div>
+
+          <!-- Scraper Target Keywords -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Target Search Keywords for Live Jordan Scraper
+            </label>
+            <input type="text" id="prof-targetKeywords" class="w-full px-3 py-2 border border-blue-300 bg-blue-50/40 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Software Engineer, Full Stack, React, Node.js, Data Analyst, Cloud">
+            <p class="text-xs text-slate-500 mt-1">The live web sync searches Jordan for jobs matching these keywords (comma-separated).</p>
+          </div>
+
+          <!-- Online Profiles -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1"><i class="fa-brands fa-github mr-1 text-slate-600"></i> GitHub URL</label>
+              <input type="url" id="prof-github" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="https://github.com/your-username">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1"><i class="fa-brands fa-linkedin mr-1 text-blue-600"></i> LinkedIn Profile URL</label>
+              <input type="url" id="prof-linkedin" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="https://linkedin.com/in/your-username">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1"><i class="fa-solid fa-globe mr-1 text-emerald-600"></i> Portfolio / Personal Site</label>
+              <input type="url" id="prof-portfolio" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="https://yourportfolio.com">
+            </div>
+          </div>
+
+          <!-- Core Skills -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Core Technical & Professional Skills (Comma separated)</label>
+            <input type="text" id="prof-skills" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. JavaScript, React, Node.js, Python, SQL, REST APIs, Docker, Git, CI/CD">
+            <p class="text-xs text-slate-500 mt-1">These will be cross-referenced against the target company's job description keywords to highlight alignment.</p>
+          </div>
+
+          <!-- Highlighted Projects -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Key Projects & Achievements (Bullet points with measurable impact)</label>
+            <textarea id="prof-projects" rows="4" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono text-xs leading-relaxed focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="• Full-Stack Platform: Built responsive e-commerce web app using React, Node.js, and PostgreSQL.
+• Microservices API: Architected RESTful microservices with JWT auth handling high concurrency.
+• Automated Data Pipeline: Developed Python ETL workflow transforming raw metrics into live dashboards."></textarea>
+            <p class="text-xs text-slate-500 mt-1">Mentioning metrics, technologies, and business outcomes significantly boosts recruiter reply rates.</p>
+          </div>
+
+          <!-- Experience / Short Bio -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Experience / Value Proposition Summary</label>
+            <textarea id="prof-experience" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Brief summary of your career background, strengths, problem solving ability, or engineering passion..."></textarea>
+          </div>
+
+          <!-- Raw Resume Text -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Resume Text (Optional for deep matching)</label>
+            <textarea id="prof-resumeText" rows="6" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Paste full resume text here to enhance extraction..."></textarea>
+          </div>
+
+          <!-- PDF Resume Placement Tip -->
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start space-x-3 text-xs text-slate-600">
+            <i class="fa-solid fa-circle-info text-blue-600 text-base mt-0.5"></i>
+            <div>
+              <strong class="text-slate-800">Attaching your CV / Resume:</strong>
+              <p class="mt-0.5">Save your PDF resume as <code class="bg-slate-200 px-1 py-0.5 rounded text-slate-800 font-mono">public/resume.pdf</code> inside the project folder. When sending cold emails, it will be automatically renamed and attached cleanly as <code class="bg-slate-200 px-1 py-0.5 rounded text-slate-800 font-mono">[Your_Name]_Resume.pdf</code>.</p>
+            </div>
+          </div>
+
+          <div class="pt-3 flex justify-end">
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-md transition-colors flex items-center space-x-2">
+              <i class="fa-solid fa-check"></i>
+              <span>Save & Update Profile</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: EMAIL & AI SETTINGS ==================== -->
+    <section id="tab-content-settings" class="tab-pane hidden space-y-6">
+      <!-- SMTP Config Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-paper-plane"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Email Dispatch Configuration (SMTP & IMAP)</h2>
+            <p class="text-xs text-slate-500">Configure your email account to send verified cold outreach emails and monitor recruiter replies.</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl mb-6 text-xs text-blue-900 flex items-start space-x-2.5">
+          <i class="fa-solid fa-shield-halved text-blue-600 text-base mt-0.5"></i>
+          <div>
+            <strong>100% Local & Self-Hosted:</strong> Your credentials are stored only on your own computer in local files. They are never sent to external servers or third-party databases.
+            <div class="mt-1">
+              <strong>Gmail Tip:</strong> Use an <strong>App Password</strong> (16 letters generated from Google Account > Security > 2-Step Verification > App Passwords), NOT your primary account password.
+            </div>
+          </div>
+        </div>
+
+        <form id="smtp-form" onsubmit="event.preventDefault(); saveSmtp();" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">SMTP Host</label>
+              <input type="text" id="smtp-host" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="smtp.gmail.com">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Port</label>
+              <input type="number" id="smtp-port" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="465">
+            </div>
+            <div class="flex items-center pt-6">
+              <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                <input type="checkbox" id="smtp-secure" checked class="rounded text-blue-600 focus:ring-blue-500">
+                <span>Use SSL/TLS (Secure)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Sender Email Address</label>
+              <input type="email" id="smtp-user" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="yourname@gmail.com">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">App Password / SMTP Password</label>
+              <input type="password" id="smtp-pass" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="xxxx xxxx xxxx xxxx">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Sender Display Name</label>
+              <input type="text" id="smtp-fromName" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Ahmad Al-Khatib">
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
+            <button type="button" onclick="testSmtpConnection()" class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg flex items-center space-x-2">
+              <i class="fa-solid fa-vial"></i>
+              <span>Test Connection</span>
+            </button>
+            <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow flex items-center space-x-2">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>Save Email Settings</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- AI Provider Preference -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Email Tailoring Engine & AI Provider</h2>
+            <p class="text-xs text-slate-500">Choose between the built-in smart algorithmic engine (100% free, no API key needed) or LLM integrations.</p>
+          </div>
+        </div>
+
+        <form id="ai-form" onsubmit="event.preventDefault(); saveAiSettings();" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Generator Mode</label>
+              <select id="ai-provider" onchange="handleAiProviderChange()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                <option value="local">Smart Algorithmic Engine (Free & Zero Setup - Recommended)</option>
+                <option value="groq">Groq (Ultra-fast, Llama-3.3)</option>
+                <option value="openai">OpenAI (GPT-4o-mini)</option>
+                <option value="anthropic">Anthropic (Claude 3.5 Haiku)</option>
+                <option value="ollama">Ollama (100% Offline Local LLM)</option>
+              </select>
+            </div>
+            <div id="ai-key-container" class="opacity-40 pointer-events-none transition-opacity">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">API Key</label>
+              <input type="password" id="ai-key" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="sk-...">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Custom Model (Optional)</label>
+              <input type="text" id="ai-model" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Default model for provider">
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-200 flex justify-end">
+            <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow flex items-center space-x-2">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>Save AI Settings</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: HISTORY ==================== -->
+    <section id="tab-content-history" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Sent Outreach Audit Trail</h2>
+            <p class="text-xs text-slate-500">Local audit log of all cold outreach emails sent or prepared through this app.</p>
+          </div>
+          <button onclick="fetchHistory()" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 flex items-center space-x-1">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Date / Time</th>
+                <th class="py-3 px-4">Company & Role</th>
+                <th class="py-3 px-4">Recipient</th>
+                <th class="py-3 px-4">Subject</th>
+                <th class="py-3 px-4">Method</th>
+                <th class="py-3 px-4">Status</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody" class="divide-y divide-slate-100">
+              <!-- History rows -->
+            </tbody>
+          </table>
+          <div id="no-history-state" class="hidden text-center py-10 text-slate-400">
+            No outreach emails recorded yet.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: INBOX & REPLIES ==================== -->
+    <section id="tab-content-inbox" class="tab-pane hidden space-y-6">
+      <!-- Summary Bar -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shadow-xs">
+            <i class="fa-solid fa-envelope-open-text"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Email Replies & Response Monitor</h2>
+            <p class="text-xs text-slate-500">Live IMAP sync from your connected Gmail (<span id="inbox-email-label" class="font-semibold text-slate-700">Configure email in Settings</span>)</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/80 flex items-center space-x-1">
+              <i class="fa-solid fa-comment-dots text-emerald-600"></i>
+              <span id="inbox-replies-count">0 Responses</span>
+            </span>
+            <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 font-bold border border-rose-200/80 flex items-center space-x-1">
+              <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+              <span id="inbox-bounces-count">0 Delivery Notices</span>
+            </span>
+          </div>
+
+          <button onclick="checkInboxReplies(true)" id="inbox-refresh-btn" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5">
+            <i class="fa-solid fa-arrows-rotate text-[11px]" id="inbox-refresh-icon"></i>
+            <span>Check Gmail Now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Inbound items list -->
+      <div id="inbox-items-container" class="space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Empty state -->
+      <div id="inbox-empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+        <div class="w-16 h-16 rounded-full bg-purple-50 text-purple-600 mx-auto flex items-center justify-center text-2xl mb-3">
+          <i class="fa-solid fa-inbox"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">No New Inbound Responses Yet</h3>
+        <p class="text-sm text-slate-500 max-w-sm mx-auto mt-1 mb-4">When a recruiter replies to your outreach or an email server reports a delivery notice, it will show up here automatically.</p>
+        <button onclick="checkInboxReplies(true)" class="px-4 py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg">
+          Check Inbox Now
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== MODAL 1: ADD / EDIT JOB ==================== -->
+  <div id="job-modal" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <h3 id="job-modal-title" class="text-base font-bold text-slate-900">Add Target Job Opportunity</h3>
+        <button onclick="closeAddJobModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="job-form" onsubmit="event.preventDefault(); submitJobForm();" class="p-6 overflow-y-auto space-y-4 flex-1">
+        <input type="hidden" id="modal-job-id">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Company Name *</label>
+            <input type="text" id="modal-company" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Bank al Etihad, Mawdoo3, OpenSooq">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Role Title *</label>
+            <input type="text" id="modal-roleTitle" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Software Engineer, Full Stack Developer, Data Analyst">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Contact / Recruiter Name</label>
+            <input type="text" id="modal-contactName" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Hiring Team or Recruiter Name">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Recipient Email Address</label>
+            <input type="email" id="modal-contactEmail" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. careers@company.com or recruiter@company.com">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Job Description / Requirements *</label>
+          <textarea id="modal-jobDescription" rows="5" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs leading-relaxed focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Paste the responsibilities and tech stack requirements from the job posting (e.g., React, Node.js, Python, SQL, REST APIs)..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tone Preference</label>
+            <select id="modal-tone" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+              <option value="direct">Direct & Concise (~120 words - Best response rate)</option>
+              <option value="project">Project & Metric-Focused (Highlights specific projects)</option>
+              <option value="enthusiastic">Enthusiastic & Product-Driven</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Personal Notes</label>
+            <input type="text" id="modal-notes" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Found on company careers page">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeAddJobModal()" class="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Save Target Job</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: REVIEW & APPROVAL GATE ("GIVE OK") ==================== -->
+  <div id="review-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-base font-bold text-slate-900">Review & Approve Tailored Email</h3>
+              <span id="review-status-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Pending Your OK</span>
+            </div>
+            <p id="review-subtitle" class="text-xs text-slate-500">Verify and customize the exact message before authorizing dispatch.</p>
+          </div>
+        </div>
+        <button onclick="closeReviewModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Split: Context + Editable Message) -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-4">
+        <!-- Target Header Card -->
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap justify-between items-center gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-500">TARGET:</span>
+            <span id="review-company" class="text-sm font-bold text-slate-900"></span>
+            <span class="text-slate-300">•</span>
+            <span id="review-role" class="text-xs font-medium text-slate-700"></span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-500">SENDING TO:</span>
+            <span id="review-recipient" class="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"></span>
+          </div>
+        </div>
+
+        <!-- Tone Switcher & Re-generate bar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-indigo-900">Regenerate with Tone:</span>
+            <select id="review-tone-select" class="text-xs py-1 px-2.5 bg-white border border-indigo-200 rounded-lg text-slate-700 focus:outline-none">
+              <option value="direct">Direct & Concise (~120 words)</option>
+              <option value="project">Project & Metric-Focused</option>
+              <option value="enthusiastic">Enthusiastic & Collaborative</option>
+            </select>
+            <button onclick="regenerateFromReviewModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1">
+              <i class="fa-solid fa-rotate text-[10px]"></i>
+              <span>Regenerate Draft</span>
+            </button>
+          </div>
+          <div id="generation-source-badge" class="text-[11px] text-slate-500 font-mono"></div>
+        </div>
+
+        <!-- Subject Line -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex justify-between">
+            <span>Email Subject Line</span>
+            <span class="text-slate-400 font-normal normal-case">Directly editable</span>
+          </label>
+          <input type="text" id="review-subject" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <!-- Email Body -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex justify-between">
+            <span>Email Body</span>
+            <span class="text-slate-400 font-normal normal-case">Review and tweak any wording before approving</span>
+          </label>
+          <textarea id="review-body" rows="12" class="w-full px-3.5 py-3 border border-slate-300 rounded-lg text-sm font-sans leading-relaxed text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- CV Attachment Control -->
+        <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+          <label class="flex items-center space-x-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
+            <input type="checkbox" id="review-attach-cv" checked class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+            <span class="flex items-center space-x-1.5">
+              <i class="fa-solid fa-paperclip text-blue-600"></i>
+              <span id="review-attachment-name">Attach CV PDF (<code class="bg-slate-200 px-1 py-0.5 rounded text-slate-800">Resume.pdf</code>)</span>
+            </span>
+          </label>
+          <a href="/resume.pdf" target="_blank" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center space-x-1">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>Preview Attached PDF</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Modal Footer (The Approval Gate) -->
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+        <!-- Quick actions -->
+        <div class="flex items-center space-x-2">
+          <button onclick="copyReviewToClipboard()" class="px-3 py-2 border border-slate-300 hover:bg-white text-slate-700 text-xs font-semibold rounded-lg flex items-center space-x-1.5 transition-colors">
+            <i class="fa-regular fa-copy"></i>
+            <span>Copy Text</span>
+          </button>
+          <button onclick="openInDesktopMail()" class="px-3 py-2 border border-slate-300 hover:bg-white text-slate-700 text-xs font-semibold rounded-lg flex items-center space-x-1.5 transition-colors" title="Launch default desktop mail app (Outlook, Thunderbird, Apple Mail)">
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            <span>Open in Mail App</span>
+          </button>
+        </div>
+
+        <!-- The 2 Primary Buttons: Approve & Send -->
+        <div class="flex items-center space-x-2">
+          <button onclick="approveMessageOnly()" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-lg transition-colors flex items-center space-x-1.5">
+            <i class="fa-solid fa-thumbs-up"></i>
+            <span>I Give My OK (Approve)</span>
+          </button>
+          <button onclick="confirmAndSendApproved()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-md transition-colors flex items-center space-x-1.5">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Approve & Send Now</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CONFIRM SEND MODAL ==================== -->
+  <div id="confirm-send-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="w-14 h-14 rounded-full bg-blue-50 text-blue-600 mx-auto flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-slate-900">Ready to Send Cold Outreach?</h3>
+        <p class="text-xs text-slate-500 mt-1">This will dispatch your approved email directly to:</p>
+        <p id="confirm-send-email" class="text-sm font-bold text-blue-700 mt-1 bg-blue-50 py-1.5 px-3 rounded-lg inline-block border border-blue-200"></p>
+      </div>
+      <div id="confirm-send-attachment-badge" class="flex items-center justify-center space-x-2 text-xs text-slate-700 bg-slate-100 py-1.5 px-3 rounded-lg border border-slate-200">
+        <i class="fa-solid fa-paperclip text-blue-600"></i>
+        <span id="confirm-send-attachment-label">Attached: <strong>Resume.pdf</strong></span>
+      </div>
+      <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-left text-xs text-amber-900 flex items-start space-x-2">
+        <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
+        <span>If SMTP is not configured, clicking continue will automatically open your default desktop email client with the subject & message filled in.</span>
+      </div>
+      <div class="flex justify-center space-x-3 pt-2">
+        <button onclick="closeConfirmSendModal()" class="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50">Cancel</button>
+        <button onclick="executeDispatch()" id="execute-dispatch-btn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow flex items-center space-x-2">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Yes, Send Email</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+    Jordan Job Hunter • Self-Hosted Job Outreach Assistant • Open Source for Jordanian Job Seekers
+  </footer>
+
+  <!-- Frontend Logic -->
+  <script src="/app.js"></script>
+</body>
+</html>
